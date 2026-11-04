@@ -11,7 +11,17 @@ Claude Code용 스킬 모음입니다.
 
 ## 설치
 
-원하는 스킬 폴더를 `~/.claude/skills/` 아래에 복사합니다. 스킬별 상세 설명은 각 폴더의 `README.md` 또는 `SKILL.md`를 참고하세요.
+**[설치 페이지](https://jungtae9lee.github.io/agent_skill/)** 에서 스킬과 도구(OpenCode, Claude Code, Cursor)를 고르고 설치하기를 누르면 됩니다. Chrome, Edge에서는 폴더를 골라 바로 설치하고, 다른 브라우저에서는 페이지가 만들어 주는 한 줄 명령을 터미널에 붙여 넣습니다.
+
+직접 설치하려면 원하는 스킬 폴더를 아래 중 한 곳에 복사합니다. 스킬별 상세 설명은 각 폴더의 `README.md` 또는 `SKILL.md`를 참고하세요.
+
+| 도구 | 폴더 |
+|---|---|
+| OpenCode | `~/.config/opencode/skills/` |
+| Claude Code | `~/.claude/skills/` |
+| Cursor | `~/.cursor/skills/` |
+
+저장소를 내려받아 둔 컴퓨터에서는 `스킬 설치.bat`을 더블클릭해도 같은 설치 화면이 열립니다.
 
 ## 서드파티 스킬
 

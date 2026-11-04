@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>스킬 설치</title>
+  <style>
+    :root {
+      --bg: #efe7da;
+      --ink: #241c14;
+      --muted: #6d6256;
+      --line: #ddcfbb;
+      --card: #fffaf3;
+      --accent: #1f4f3a;
+      --accent-soft: #e5f2ea;
+      --warn: #8a4b12;
+      --warn-bg: #fff1e4;
+      --bad: #8d2b24;
+      --bad-bg: #fdeceb;
+      --shadow: 0 16px 40px rgba(48, 32, 14, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 32%),
+        var(--bg);
+      font: 16px/1.5 "Segoe UI", "Malgun Gothic", sans-serif;
+    }
+
+    button, input { font: inherit; color: inherit; }
+
+    .wrap {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0 120px;
+    }
+
+    header h1 {
+      margin: 8px 0 8px;
+      font-size: 40px;
+      line-height: 1.15;
+      letter-spacing: -0.04em;
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .lead {
+      max-width: 680px;
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 24px;
+      margin-top: 28px;
+      align-items: start;
+    }
+
+    .panel, .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel { padding: 18px; position: sticky; top: 16px; }
+    .panel h2, .skills-head h2 { margin: 0; font-size: 18px; letter-spacing: -0.03em; }
+    .hint { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+
+    .scope { margin-top: 16px; }
+    .scope h3 {
+      margin: 0 0 8px;
+      font-size: 13px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .choice {
+      display: grid;
+      grid-template-columns: 20px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .choice strong { display: block; }
+    .choice span, .path {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      word-break: break-all;
+    }
+
+    label.path-field {
+      display: block;
+      margin-top: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      margin-top: 6px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+    }
+
+    input:focus, button:focus-visible, .card:focus-within {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .field-error { min-height: 1.2em; margin: 6px 0 0; color: var(--bad); font-size: 12px; }
+
+    .skills-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 12px;
+    }
+
+    .text-button {
+      border: 0;
+      background: transparent;
+      color: var(--accent);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .card {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 12px;
+      padding: 16px;
+      cursor: pointer;
+    }
+
+    .card.selected {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, var(--accent-soft), var(--card) 72px);
+    }
+
+    .card h3 { margin: 0; font-size: 20px; letter-spacing: -0.03em; }
+    .card p { margin: 8px 0 0; }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .chip, .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #f3ecdf;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .badge.ready { background: var(--accent-soft); color: var(--accent); }
+    .badge.remote { background: var(--warn-bg); color: var(--warn); }
+
+    .bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-top: 1px solid var(--line);
+      background: rgba(255, 250, 243, 0.94);
+      backdrop-filter: blur(10px);
+    }
+
+    .bar-inner {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 14px 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .bar p { margin: 0; }
+    .bar small { display: block; color: var(--muted); }
+
+    .install {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 22px;
+      background: var(--accent);
+      color: #f7f3ea;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .install:disabled { cursor: default; opacity: 0.45; }
+
+    .results {
+      margin-top: 18px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .result {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--line);
+    }
+
+    .result.bad { background: var(--bad-bg); border-color: #f2c7c3; }
+    .result strong { display: block; }
+    .result span { color: var(--muted); font-size: 13px; word-break: break-all; }
+
+    .banner {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--bad-bg);
+      color: var(--bad);
+    }
+
+    footer {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    @media (max-width: 860px) {
+      header h1 { font-size: 32px; }
+      .layout { grid-template-columns: 1fr; }
+      .panel { position: static; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow">agent_skill</p>
+      <h1>스킬을 골라 설치</h1>
+      <p class="lead">카드를 고르고 설치를 누르면, 이 컴퓨터에서 OpenCode, Claude Code, Cursor가 읽는 폴더로 스킬이 복사됩니다.</p>
+    </header>
+    <div id="banner"></div>
+    <div class="layout">
+      <aside class="panel">
+        <h2>설치 위치</h2>
+        <p class="hint">OpenCode는 자기 폴더와 Claude Code 폴더를 모두 읽습니다. 한 곳만 골라도 사용할 수 있습니다.</p>
+        <section class="scope">
+          <h3>이 컴퓨터 전체</h3>
+          <div id="global-targets"></div>
+        </section>
+        <section class="scope">
+          <h3>한 프로젝트</h3>
+          <label class="path-field">프로젝트 폴더
+            <input id="project-path" type="text" placeholder="C:\work\my-project" autocomplete="off">
+          </label>
+          <p id="project-error" class="field-error"></p>
+          <div id="project-targets"></div>
+        </section>
+      </aside>
+      <section>
+        <div class="skills-head">
+          <h2>스킬</h2>
+          <button id="toggle-all" class="text-button" type="button">전체 선택</button>
+        </div>
+        <div id="skills" class="grid"></div>
+        <div id="results" class="results"></div>
+        <footer id="repo-note"></footer>
+      </section>
+    </div>
+  </main>
+  <div class="bar">
+    <div class="bar-inner">
+      <p>
+        <span id="summary">스킬을 선택해 주세요.</span>
+        <small>이미 있는 폴더는 지우고 방금 고른 스킬로 다시 넣습니다.</small>
+      </p>
+      <button id="install" class="install" type="button" disabled>설치하기</button>
+    </div>
+  </div>
+  <script>
+    const state = {
+      catalog: null,
+      selectedSkills: new Set(),
+      selectedTargets: new Set(["opencode"]),
+      projectPath: "",
+      busy: false,
+    };
+
+    const skillsEl = document.querySelector("#skills");
+    const globalEl = document.querySelector("#global-targets");
+    const projectEl = document.querySelector("#project-targets");
+    const summaryEl = document.querySelector("#summary");
+    const installButton = document.querySelector("#install");
+    const resultsEl = document.querySelector("#results");
+    const bannerEl = document.querySelector("#banner");
+    const projectInput = document.querySelector("#project-path");
+    const projectError = document.querySelector("#project-error");
+    const toggleAll = document.querySelector("#toggle-all");
+    const repoNote = document.querySelector("#repo-note");
+
+    function targetLabel(id) {
+      const target = (state.catalog?.targets || []).find((item) => item.id === id);
+      return target ? target.label : id;
+    }
+
+    function renderTargets(container, scope) {
+      container.replaceChildren();
+      for (const target of state.catalog.targets.filter((item) => item.scope === scope)) {
+        const label = document.createElement("label");
+        label.className = "choice";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = state.selectedTargets.has(target.id);
+        input.addEventListener("change", () => {
+          if (input.checked) state.selectedTargets.add(target.id);
+          else state.selectedTargets.delete(target.id);
+          renderSkills();
+          updateBar();
+        });
+        const text = document.createElement("div");
+        const name = document.createElement("strong");
+        name.textContent = target.label;
+        const detail = document.createElement("span");
+        detail.textContent = target.detail;
+        const path = document.createElement("span");
+        path.className = "path";
+        path.textContent = target.path || "프로젝트 폴더를 입력하면 경로가 표시됩니다.";
+        text.append(name, detail, path);
+        label.append(input, text);
+        container.append(label);
+      }
+    }
+
+    function installedBadges(skill) {
+      const row = document.createElement("div");
+      row.className = "meta";
+      const source = document.createElement("span");
+      source.className = "chip";
+      source.textContent = skill.source;
+      row.append(source);
+      if (skill.remote) {
+        const remote = document.createElement("span");
+        remote.className = "badge remote";
+        remote.textContent = "설치할 때 GitHub에서 받음";
+        row.append(remote);
+      } else if (skill.files != null) {
+        const files = document.createElement("span");
+        files.className = "chip";
+        files.textContent = `파일 ${skill.files}개`;
+        row.append(files);
+      }
+      for (const targetId of state.selectedTargets) {
+        const badge = document.createElement("span");
+        const ready = state.catalog.installed?.[skill.id]?.[targetId];
+        badge.className = ready ? "badge ready" : "badge";
+        badge.textContent = `${targetLabel(targetId)} · ${ready ? "설치됨" : "없음"}`;
+        row.append(badge);
+      }
+      return row;
+    }
+
+    function renderSkills() {
+      skillsEl.replaceChildren();
+      for (const skill of state.catalog.skills) {
+        const card = document.createElement("label");
+        card.className = state.selectedSkills.has(skill.id) ? "card selected" : "card";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = state.selectedSkills.has(skill.id);
+        input.addEventListener("change", () => {
+          if (input.checked) state.selectedSkills.add(skill.id);
+          else state.selectedSkills.delete(skill.id);
+          card.className = input.checked ? "card selected" : "card";
+          updateBar();
+        });
+        const body = document.createElement("div");
+        const title = document.createElement("h3");
+        title.textContent = skill.name;
+        const blurb = document.createElement("p");
+        blurb.textContent = skill.blurb;
+        body.append(title, blurb, installedBadges(skill));
+        card.append(input, body);
+        skillsEl.append(card);
+      }
+      const allSelected = state.catalog.skills.length > 0
+        && state.catalog.skills.every((skill) => state.selectedSkills.has(skill.id));
+      toggleAll.textContent = allSelected ? "전체 해제" : "전체 선택";
+    }
+
+    function updateBar() {
+      const skillCount = state.selectedSkills.size;
+      const targetCount = state.selectedTargets.size;
+      const needsProject = [...state.selectedTargets].some((id) => id.endsWith("-project"));
+      const projectMissing = needsProject && !state.projectPath.trim();
+      const projectInvalid = needsProject && Boolean(state.catalog?.projectError);
+      if (skillCount === 0 || targetCount === 0) {
+        summaryEl.textContent = "스킬과 설치 위치를 선택해 주세요.";
+      } else {
+        summaryEl.textContent = `스킬 ${skillCount}개 · 위치 ${targetCount}곳`;
+      }
+      installButton.disabled = state.busy || skillCount === 0 || targetCount === 0 || projectMissing || projectInvalid;
+      installButton.textContent = state.busy ? "설치 중…" : "설치하기";
+    }
+
+    function showResults(payload) {
+      resultsEl.replaceChildren();
+      const results = payload.results || [];
+      if (!results.length && payload.error) {
+        const row = document.createElement("div");
+        row.className = "result bad";
+        row.textContent = payload.error;
+        resultsEl.append(row);
+        return;
+      }
+      for (const item of results) {
+        const row = document.createElement("div");
+        row.className = item.ok ? "result" : "result bad";
+        const title = document.createElement("strong");
+        const action = item.action === "replaced" ? "기존 폴더를 교체했습니다" : "설치했습니다";
+        title.textContent = item.ok
+          ? `${item.skill} → ${targetLabel(item.target)} · ${action}`
+          : `${item.skill} → ${targetLabel(item.target)} · 실패`;
+        const detail = document.createElement("span");
+        detail.textContent = item.ok ? item.path : item.error;
+        row.append(title, detail);
+        resultsEl.append(row);
+      }
+    }
+
+    async function loadCatalog() {
+      const query = state.projectPath.trim()
+        ? `?project=${encodeURIComponent(state.projectPath.trim())}`
+        : "";
+      const response = await fetch(`/api/catalog${query}`);
+      if (!response.ok) throw new Error("목록을 불러오지 못했습니다.");
+      state.catalog = await response.json();
+      projectError.textContent = state.catalog.projectError || "";
+      repoNote.textContent = `원본 폴더 ${state.catalog.repo}. 다음에는 저장소의 "스킬 설치.bat"을 더블클릭하면 이 페이지가 열립니다. 검은 창은 페이지를 쓰는 동안 켜 둡니다.`;
+      renderTargets(globalEl, "global");
+      renderTargets(projectEl, "project");
+      renderSkills();
+      updateBar();
+    }
+
+    let projectTimer = 0;
+    projectInput.addEventListener("input", () => {
+      state.projectPath = projectInput.value;
+      window.clearTimeout(projectTimer);
+      projectTimer = window.setTimeout(() => {
+        loadCatalog().catch((error) => {
+          bannerEl.innerHTML = "";
+          const box = document.createElement("div");
+          box.className = "banner";
+          box.textContent = error.message;
+          bannerEl.append(box);
+        });
+      }, 250);
+    });
+
+    toggleAll.addEventListener("click", () => {
+      if (!state.catalog) return;
+      const allSelected = state.catalog.skills.every((skill) => state.selectedSkills.has(skill.id));
+      state.selectedSkills = allSelected
+        ? new Set()
+        : new Set(state.catalog.skills.map((skill) => skill.id));
+      renderSkills();
+      updateBar();
+    });
+
+    installButton.addEventListener("click", async () => {
+      state.busy = true;
+      updateBar();
+      resultsEl.replaceChildren();
+      try {
+        const response = await fetch("/api/install", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            skills: [...state.selectedSkills],
+            targets: [...state.selectedTargets],
+            projectPath: state.projectPath.trim(),
+          }),
+        });
+        const payload = await response.json();
+        showResults(payload);
+        await loadCatalog();
+      } catch (error) {
+        showResults({ error: error.message || "설치 요청이 실패했습니다." });
+      } finally {
+        state.busy = false;
+        updateBar();
+      }
+    });
+
+    loadCatalog().catch((error) => {
+      const box = document.createElement("div");
+      box.className = "banner";
+      box.textContent = error.message;
+      bannerEl.append(box);
+    });
+  </script>
+</body>
+</html>

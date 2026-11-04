@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>agent_skill · 스킬 설치</title>
+  <meta name="description" content="OpenCode, Claude Code, Cursor에 agent_skill 스킬을 골라 설치합니다.">
+  <style>
+    :root {
+      --bg: #efe7da;
+      --ink: #241c14;
+      --muted: #6d6256;
+      --line: #ddcfbb;
+      --card: #fffaf3;
+      --accent: #1f4f3a;
+      --accent-soft: #e5f2ea;
+      --warn: #8a4b12;
+      --warn-bg: #fff1e4;
+      --bad: #8d2b24;
+      --bad-bg: #fdeceb;
+      --code: #2a2119;
+      --shadow: 0 16px 40px rgba(48, 32, 14, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.7), transparent 32%),
+        var(--bg);
+      font: 16px/1.55 "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+    }
+
+    button, input, select { font: inherit; color: inherit; }
+    a { color: var(--accent); }
+
+    .wrap {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 36px 0 132px;
+    }
+
+    header h1 {
+      margin: 8px 0;
+      font-size: 40px;
+      line-height: 1.15;
+      letter-spacing: -0.04em;
+    }
+
+    .eyebrow {
+      margin: 0;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .lead { max-width: 720px; margin: 0; color: var(--muted); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+      margin-top: 28px;
+      align-items: start;
+    }
+
+    .panel, .card, .section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel { padding: 18px; position: sticky; top: 16px; }
+    .panel h2, .head h2, .section h2 { margin: 0; font-size: 18px; letter-spacing: -0.03em; }
+    .hint { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+
+    .choice {
+      display: grid;
+      grid-template-columns: 20px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+      cursor: pointer;
+    }
+
+    .choice:first-of-type { margin-top: 12px; }
+    .choice strong { display: block; }
+    .choice small { display: block; color: var(--muted); font-size: 12px; line-height: 1.45; }
+
+    code, .path {
+      font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+      font-size: 12px;
+      word-break: break-all;
+    }
+
+    .path {
+      display: inline-flex;
+      gap: 6px;
+      align-items: center;
+      margin-top: 4px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: #f3ecdf;
+      color: var(--code);
+    }
+
+    .os-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 14px;
+    }
+
+    .os-row button {
+      flex: 1;
+      padding: 6px 8px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: transparent;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    .os-row button[aria-pressed="true"] {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: end;
+      margin-bottom: 12px;
+    }
+
+    .text-button {
+      border: 0;
+      background: transparent;
+      color: var(--accent);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .grid { display: grid; gap: 12px; }
+
+    .card {
+      display: grid;
+      grid-template-columns: 22px 1fr;
+      gap: 12px;
+      padding: 16px;
+      cursor: pointer;
+    }
+
+    .card.selected {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, var(--accent-soft), var(--card) 72px);
+    }
+
+    .card h3 { margin: 0; font-size: 20px; letter-spacing: -0.03em; }
+    .card p { margin: 8px 0 0; }
+
+    .meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: #f3ecdf;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .chip.remote { background: var(--warn-bg); color: var(--warn); }
+
+    input:focus-visible, button:focus-visible, .card:focus-within, .choice:focus-within {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .section { margin-top: 20px; padding: 18px; }
+    .section p { margin: 8px 0 0; }
+
+    .command {
+      position: relative;
+      margin-top: 12px;
+      padding: 14px 16px;
+      padding-right: 86px;
+      border-radius: 12px;
+      background: var(--code);
+      color: #f7f3ea;
+      font-family: Consolas, "SFMono-Regular", Menlo, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .copy {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 4px 10px;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      border-radius: 999px;
+      background: transparent;
+      color: #f7f3ea;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .results { margin-top: 18px; display: grid; gap: 8px; }
+
+    .result {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: var(--card);
+      border: 1px solid var(--line);
+    }
+
+    .result.bad { background: var(--bad-bg); border-color: #f2c7c3; }
+    .result.info { background: var(--warn-bg); border-color: #f0d5b8; }
+    .result strong { display: block; }
+    .result span { color: var(--muted); font-size: 13px; word-break: break-all; }
+
+    .progress { margin-top: 10px; color: var(--muted); font-size: 13px; min-height: 1.4em; }
+
+    ol.steps { margin: 10px 0 0; padding-left: 20px; }
+    ol.steps li { margin: 4px 0; }
+
+    .bar {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-top: 1px solid var(--line);
+      background: rgba(255, 250, 243, 0.94);
+      backdrop-filter: blur(10px);
+    }
+
+    .bar-inner {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 14px 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .bar p { margin: 0; }
+    .bar small { display: block; color: var(--muted); }
+
+    .install {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 22px;
+      background: var(--accent);
+      color: #f7f3ea;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .install:disabled { cursor: default; opacity: 0.45; }
+
+    footer { margin-top: 22px; color: var(--muted); font-size: 13px; }
+
+    @media (max-width: 860px) {
+      header h1 { font-size: 32px; }
+      .layout { grid-template-columns: 1fr; }
+      .panel { position: static; }
+      .bar-inner { flex-direction: column; align-items: stretch; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <p class="eyebrow"><a href="https://github.com/Jungtae9Lee/agent_skill">Jungtae9Lee/agent_skill</a></p>
+      <h1>스킬을 골라 설치</h1>
+      <p class="lead">스킬을 고르고 설치할 도구를 정한 뒤 <strong>설치하기</strong>를 누르세요. 브라우저가 폴더를 하나 고르라고 물으면 아래에 표시된 <code>skills</code> 폴더를 고르면 됩니다. 파일은 GitHub에서 바로 받아 그 폴더에 씁니다.</p>
+    </header>
+
+    <div class="layout">
+      <aside class="panel">
+        <h2>설치할 도구</h2>
+        <p class="hint">한 곳만 골라도 됩니다. OpenCode는 Claude Code 폴더도 함께 읽습니다.</p>
+        <div class="os-row" role="group" aria-label="운영체제">
+          <button type="button" data-os="windows">Windows</button>
+          <button type="button" data-os="mac">macOS</button>
+          <button type="button" data-os="linux">Linux</button>
+        </div>
+        <div id="targets"></div>
+      </aside>
+
+      <section>
+        <div class="head">
+          <h2>스킬</h2>
+          <button id="toggle-all" class="text-button" type="button">전체 선택</button>
+        </div>
+        <div id="skills" class="grid"></div>
+        <div id="progress" class="progress" aria-live="polite"></div>
+        <div id="results" class="results"></div>
+
+        <div class="section">
+          <h2>버튼으로 설치되지 않을 때</h2>
+          <p>폴더에 바로 쓰는 기능은 Chrome과 Edge에서만 됩니다. Firefox나 Safari라면, 또는 폴더를 고르기 번거롭다면 아래 명령을 복사해 터미널에 붙여 넣으세요. 위에서 고른 스킬과 도구가 그대로 반영됩니다.</p>
+          <div class="command" id="command"><button class="copy" type="button" id="copy-command">복사</button><span id="command-text"></span></div>
+          <p class="hint" id="command-hint"></p>
+        </div>
+
+        <div class="section">
+          <h2>설치한 뒤</h2>
+          <ol class="steps">
+            <li>OpenCode, Claude Code, Cursor를 이미 켜 두었다면 한 번 다시 시작합니다.</li>
+            <li>새 대화에서 스킬이 하는 일을 부탁하면 알아서 불러옵니다. 예를 들어 confidence는 "확신도 붙여서 답해 줘"로 확인할 수 있습니다.</li>
+            <li>같은 스킬을 다시 설치하면 이전 폴더를 지우고 새 파일로 바꿉니다. 업데이트도 같은 방법으로 합니다.</li>
+          </ol>
+        </div>
+
+        <footer>
+          스킬 원본은 <a href="https://github.com/Jungtae9Lee/agent_skill">GitHub 저장소</a>에 있습니다.
+          doc-coauthoring은 <a href="https://github.com/anthropics/skills/tree/main/skills/doc-coauthoring">anthropics/skills</a>에서 받습니다.
+        </footer>
+      </section>
+    </div>
+  </main>
+
+  <div class="bar">
+    <div class="bar-inner">
+      <p>
+        <span id="summary">스킬을 선택해 주세요.</span>
+        <small id="bar-note">브라우저가 폴더 접근 권한을 물으면 허용해 주세요.</small>
+      </p>
+      <button id="install" class="install" type="button" disabled>설치하기</button>
+    </div>
+  </div>
+
+  <script>
+    const REPO = { owner: "Jungtae9Lee", name: "agent_skill", ref: "main" };
+    const SITE = "https://jungtae9lee.github.io/agent_skill";
+
+    const SKILLS = [
+      {
+        id: "confidence",
+        blurb: "답변의 핵심 주장과 최종 답에 확신도 P(Y)를 붙이고, 기록으로 보정 상태를 측정합니다.",
+        source: "자체 제작",
+      },
+      {
+        id: "discernment-nudge",
+        blurb: "조언, 추정, 분석 답변 뒤에 사실과 가정, 빠진 맥락을 점검하는 후속 질문 2~3개를 붙입니다.",
+        source: "Anthropic · Apache 2.0",
+      },
+      {
+        id: "doc-coauthoring",
+        blurb: "제안서, 기술 스펙, 의사결정 문서를 단계별로 함께 작성합니다.",
+        source: "Anthropic",
+        remote: { owner: "anthropics", name: "skills", ref: "main", path: "skills/doc-coauthoring" },
+      },
+      {
+        id: "skill-creator",
+        blurb: "스킬을 만들고 고친 뒤, eval로 성능을 측정합니다.",
+        source: "Anthropic · Apache 2.0",
+      },
+    ];
+
+    const TARGETS = [
+      {
+        id: "opencode",
+        label: "OpenCode",
+        detail: "모든 프로젝트에서 OpenCode가 읽습니다.",
+        parents: ["opencode"],
+        path: { windows: "%USERPROFILE%\\.config\\opencode\\skills", mac: "~/.config/opencode/skills", linux: "~/.config/opencode/skills" },
+      },
+      {
+        id: "claude",
+        label: "Claude Code",
+        detail: "모든 프로젝트에서 Claude Code가 읽습니다. OpenCode도 이 폴더를 읽습니다.",
+        parents: [".claude"],
+        path: { windows: "%USERPROFILE%\\.claude\\skills", mac: "~/.claude/skills", linux: "~/.claude/skills" },
+      },
+      {
+        id: "cursor",
+        label: "Cursor",
+        detail: "모든 프로젝트에서 Cursor가 읽습니다.",
+        parents: [".cursor"],
+        path: { windows: "%USERPROFILE%\\.cursor\\skills", mac: "~/.cursor/skills", linux: "~/.cursor/skills" },
+      },
+      {
+        id: "project",
+        label: "한 프로젝트만",
+        detail: "프로젝트 폴더를 고르면 그 안의 .opencode/skills에 넣습니다. 그 프로젝트에서만 읽습니다.",
+        project: true,
+        path: { windows: "<프로젝트 폴더>", mac: "<프로젝트 폴더>", linux: "<프로젝트 폴더>" },
+      },
+    ];
+
+    const state = {
+      os: detectOs(),
+      selectedSkills: new Set(),
+      target: "opencode",
+      busy: false,
+      tree: null,
+      counts: {},
+    };
+
+    const els = {
+      skills: document.querySelector("#skills"),
+      targets: document.querySelector("#targets"),
+      summary: document.querySelector("#summary"),
+      barNote: document.querySelector("#bar-note"),
+      install: document.querySelector("#install"),
+      results: document.querySelector("#results"),
+      progress: document.querySelector("#progress"),
+      toggleAll: document.querySelector("#toggle-all"),
+      commandText: document.querySelector("#command-text"),
+      commandHint: document.querySelector("#command-hint"),
+      copy: document.querySelector("#copy-command"),
+    };
+
+    const canWriteFolders = typeof window.showDirectoryPicker === "function";
+
+    function detectOs() {
+      const platform = (navigator.userAgentData?.platform || navigator.platform || navigator.userAgent).toLowerCase();
+      if (platform.includes("win")) return "windows";
+      if (platform.includes("mac") || platform.includes("iphone") || platform.includes("ipad")) return "mac";
+      return "linux";
+    }
+
+    function target() {
+      return TARGETS.find((item) => item.id === state.target);
+    }
+
+    function renderOs() {
+      for (const button of document.querySelectorAll(".os-row button")) {
+        button.setAttribute("aria-pressed", String(button.dataset.os === state.os));
+      }
+    }
+
+    function renderTargets() {
+      els.targets.replaceChildren();
+      for (const item of TARGETS) {
+        const label = document.createElement("label");
+        label.className = "choice";
+        const input = document.createElement("input");
+        input.type = "radio";
+        input.name = "target";
+        input.checked = state.target === item.id;
+        input.addEventListener("change", () => {
+          state.target = item.id;
+          update();
+        });
+        const body = document.createElement("div");
+        const name = document.createElement("strong");
+        name.textContent = item.label;
+        const detail = document.createElement("small");
+        detail.textContent = item.detail;
+        const path = document.createElement("span");
+        path.className = "path";
+        path.textContent = item.path[state.os];
+        body.append(name, detail, path);
+        label.append(input, body);
+        els.targets.append(label);
+      }
+    }
+
+    function renderSkills() {
+      els.skills.replaceChildren();
+      for (const skill of SKILLS) {
+        const selected = state.selectedSkills.has(skill.id);
+        const card = document.createElement("label");
+        card.className = selected ? "card selected" : "card";
+        const input = document.createElement("input");
+        input.type = "checkbox";
+        input.checked = selected;
+        input.addEventListener("change", () => {
+          if (input.checked) state.selectedSkills.add(skill.id);
+          else state.selectedSkills.delete(skill.id);
+          update();
+        });
+        const body = document.createElement("div");
+        const title = document.createElement("h3");
+        title.textContent = skill.id;
+        const blurb = document.createElement("p");
+        blurb.textContent = skill.blurb;
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        const source = document.createElement("span");
+        source.className = "chip";
+        source.textContent = skill.source;
+        meta.append(source);
+        if (skill.remote) {
+          const remote = document.createElement("span");
+          remote.className = "chip remote";
+          remote.textContent = "anthropics/skills에서 받음";
+          meta.append(remote);
+        } else if (state.counts[skill.id]) {
+          const files = document.createElement("span");
+          files.className = "chip";
+          files.textContent = `파일 ${state.counts[skill.id]}개`;
+          meta.append(files);
+        }
+        const view = document.createElement("a");
+        view.className = "chip";
+        view.href = skill.remote
+          ? `https://github.com/${skill.remote.owner}/${skill.remote.name}/tree/${skill.remote.ref}/${skill.remote.path}`
+          : `https://github.com/${REPO.owner}/${REPO.name}/tree/${REPO.ref}/${skill.id}`;
+        view.target = "_blank";
+        view.rel = "noopener";
+        view.textContent = "원본 보기";
+        view.addEventListener("click", (event) => event.stopPropagation());
+        meta.append(view);
+        body.append(title, blurb, meta);
+        card.append(input, body);
+        els.skills.append(card);
+      }
+      const all = SKILLS.every((skill) => state.selectedSkills.has(skill.id));
+      els.toggleAll.textContent = all ? "전체 해제" : "전체 선택";
+    }
+
+    function commandFor() {
+      const skills = [...state.selectedSkills];
+      const list = skills.length ? skills : ["confidence"];
+      const current = target();
+      if (state.os === "windows") {
+        const args = [`-Skills ${list.join(",")}`];
+        if (current.project) args.push(`-Project "C:\\path\\to\\project"`);
+        else args.push(`-Target ${current.id}`);
+        return `& ([scriptblock]::Create((irm ${SITE}/install.ps1))) ${args.join(" ")}`;
+      }
+      const args = current.project ? [`--project "/path/to/project"`] : [`--target ${current.id}`];
+      return `curl -fsSL ${SITE}/install.sh | bash -s -- ${args.join(" ")} ${list.join(" ")}`;
+    }
+
+    function renderCommand() {
+      els.commandText.textContent = commandFor();
+      const shell = state.os === "windows" ? "PowerShell" : "터미널";
+      const extra = target().project ? " 경로 부분은 실제 프로젝트 폴더로 바꿔 주세요." : "";
+      const none = state.selectedSkills.size ? "" : " 스킬을 고르면 명령이 바뀝니다.";
+      els.commandHint.textContent = `${shell}에 붙여 넣으면 됩니다.${extra}${none}`;
+    }
+
+    function update() {
+      renderOs();
+      renderTargets();
+      renderSkills();
+      renderCommand();
+      const count = state.selectedSkills.size;
+      els.summary.textContent = count
+        ? `스킬 ${count}개 → ${target().label}`
+        : "스킬을 선택해 주세요.";
+      if (!canWriteFolders) {
+        els.barNote.textContent = "이 브라우저는 폴더에 바로 쓸 수 없습니다. 아래 명령을 쓰거나 Chrome, Edge에서 열어 주세요.";
+      } else if (target().project) {
+        els.barNote.textContent = "폴더를 고르라고 하면 프로젝트 폴더를 고르세요.";
+      } else {
+        els.barNote.textContent = `폴더를 고르라고 하면 ${target().path[state.os]} 를 고르세요. 없으면 상위 폴더를 고르면 만들어 드립니다.`;
+      }
+      els.install.disabled = state.busy || count === 0 || !canWriteFolders;
+      els.install.textContent = state.busy ? "설치 중…" : "설치하기";
+    }
+
+    function addResult(kind, title, detail) {
+      const row = document.createElement("div");
+      row.className = kind === "ok" ? "result" : `result ${kind}`;
+      const strong = document.createElement("strong");
+      strong.textContent = title;
+      row.append(strong);
+      if (detail) {
+        const span = document.createElement("span");
+        span.textContent = detail;
+        row.append(span);
+      }
+      els.results.append(row);
+    }
+
+    async function githubJson(url) {
+      const response = await fetch(url, { headers: { Accept: "application/vnd.github+json" } });
+      if (response.status === 403 || response.status === 429) {
+        throw new Error("GitHub 요청 한도를 넘었습니다. 잠시 뒤 다시 시도하거나 아래 명령을 써 주세요.");
+      }
+      if (!response.ok) throw new Error(`GitHub에서 목록을 받지 못했습니다 (HTTP ${response.status}).`);
+      return response.json();
+    }
+
+    async function loadTree() {
+      if (state.tree) return state.tree;
+      const data = await githubJson(`https://api.github.com/repos/${REPO.owner}/${REPO.name}/git/trees/${REPO.ref}?recursive=1`);
+      state.tree = data.tree.filter((item) => item.type === "blob");
+      for (const skill of SKILLS) {
+        if (skill.remote) continue;
+        state.counts[skill.id] = state.tree.filter((item) => item.path.startsWith(`${skill.id}/`)).length;
+      }
+      return state.tree;
+    }
+
+    async function listRemoteFiles(remote, path = remote.path) {
+      const entries = await githubJson(`https://api.github.com/repos/${remote.owner}/${remote.name}/contents/${path}?ref=${remote.ref}`);
+      const files = [];
+      for (const entry of entries) {
+        if (entry.type === "file") {
+          files.push({
+            relative: entry.path.slice(remote.path.length + 1),
+            url: entry.download_url,
+          });
+        } else if (entry.type === "dir") {
+          files.push(...await listRemoteFiles(remote, entry.path));
+        }
+      }
+      return files;
+    }
+
+    async function filesFor(skill) {
+      if (skill.remote) return listRemoteFiles(skill.remote);
+      const tree = await loadTree();
+      return tree
+        .filter((item) => item.path.startsWith(`${skill.id}/`))
+        .filter((item) => !item.path.includes("/__pycache__/") && !item.path.endsWith(".pyc"))
+        .map((item) => ({
+          relative: item.path.slice(skill.id.length + 1),
+          url: `https://raw.githubusercontent.com/${REPO.owner}/${REPO.name}/${REPO.ref}/${item.path.split("/").map(encodeURIComponent).join("/")}`,
+        }));
+    }
+
+    function safeParts(relative) {
+      const parts = relative.split("/");
+      if (parts.some((part) => !part || part === "." || part === "..")) {
+        throw new Error(`올바르지 않은 파일 경로입니다: ${relative}`);
+      }
+      return parts;
+    }
+
+    async function writeFile(root, relative, blob) {
+      const parts = safeParts(relative);
+      let dir = root;
+      for (const part of parts.slice(0, -1)) {
+        dir = await dir.getDirectoryHandle(part, { create: true });
+      }
+      const handle = await dir.getFileHandle(parts.at(-1), { create: true });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+    }
+
+    async function entryExists(dir, name) {
+      try {
+        await dir.getDirectoryHandle(name);
+        return true;
+      } catch {
+        try {
+          await dir.getFileHandle(name);
+          return true;
+        } catch {
+          return false;
+        }
+      }
+    }
+
+    async function resolveSkillsDir(picked) {
+      const current = target();
+      if (current.project) {
+        if (picked.name === "skills") return picked;
+        if (picked.name === ".opencode") return picked.getDirectoryHandle("skills", { create: true });
+        const tool = await picked.getDirectoryHandle(".opencode", { create: true });
+        return tool.getDirectoryHandle("skills", { create: true });
+      }
+      if (picked.name === "skills") return picked;
+      if (current.parents.includes(picked.name)) {
+        return picked.getDirectoryHandle("skills", { create: true });
+      }
+      if (current.id === "opencode" && picked.name === ".config") {
+        const opencode = await picked.getDirectoryHandle("opencode", { create: true });
+        return opencode.getDirectoryHandle("skills", { create: true });
+      }
+      const ok = window.confirm(
+        `고른 폴더 이름이 "${picked.name}" 입니다.\n${current.label}은(는) 보통 ${current.path[state.os]} 를 읽습니다.\n그래도 이 폴더 안에 스킬을 넣을까요?`
+      );
+      if (!ok) throw new DOMException("cancelled", "AbortError");
+      return picked;
+    }
+
+    async function pickFolder() {
+      const options = { id: `skills-${state.target}`, mode: "readwrite" };
+      if (target().project) options.startIn = "documents";
+      return window.showDirectoryPicker(options);
+    }
+
+    async function installSkill(skillsDir, skill) {
+      els.progress.textContent = `${skill.id}: 파일 목록을 받는 중`;
+      const files = await filesFor(skill);
+      if (!files.some((file) => file.relative === "SKILL.md")) {
+        throw new Error("SKILL.md가 없어 설치하지 않았습니다.");
+      }
+      const downloads = [];
+      let done = 0;
+      for (const file of files) {
+        const response = await fetch(file.url);
+        if (!response.ok) throw new Error(`${file.relative} 파일을 받지 못했습니다 (HTTP ${response.status}).`);
+        downloads.push({ relative: file.relative, blob: await response.blob() });
+        done += 1;
+        els.progress.textContent = `${skill.id}: 받는 중 ${done}/${files.length}`;
+      }
+
+      const temporary = `.${skill.id}.install-tmp`;
+      if (await entryExists(skillsDir, temporary)) {
+        await skillsDir.removeEntry(temporary, { recursive: true });
+      }
+      const staging = await skillsDir.getDirectoryHandle(temporary, { create: true });
+      for (const file of downloads) {
+        await writeFile(staging, file.relative, file.blob);
+      }
+
+      const replaced = await entryExists(skillsDir, skill.id);
+      if (replaced) await skillsDir.removeEntry(skill.id, { recursive: true });
+      if (typeof staging.move === "function") {
+        await staging.move(skill.id);
+      } else {
+        const finalDir = await skillsDir.getDirectoryHandle(skill.id, { create: true });
+        for (const file of downloads) {
+          await writeFile(finalDir, file.relative, file.blob);
+        }
+        await skillsDir.removeEntry(temporary, { recursive: true });
+      }
+      return { replaced, count: downloads.length };
+    }
+
+    async function install() {
+      state.busy = true;
+      update();
+      els.results.replaceChildren();
+      els.progress.textContent = "";
+      try {
+        let picked;
+        try {
+          picked = await pickFolder();
+        } catch (error) {
+          if (error.name === "AbortError") {
+            addResult("info", "폴더 선택을 취소했습니다.", "다시 설치하기를 누르면 이어서 할 수 있습니다.");
+            return;
+          }
+          if (error.name === "SecurityError" || error.name === "NotAllowedError") {
+            addResult("bad", "브라우저가 이 폴더를 막았습니다.", "그 안의 skills 폴더를 직접 고르거나, 아래 명령으로 설치해 주세요.");
+            return;
+          }
+          throw error;
+        }
+
+        let skillsDir;
+        try {
+          skillsDir = await resolveSkillsDir(picked);
+        } catch (error) {
+          if (error.name === "AbortError") {
+            addResult("info", "설치를 취소했습니다.", "알맞은 폴더를 골라 다시 시도해 주세요.");
+            return;
+          }
+          throw error;
+        }
+
+        for (const skill of SKILLS.filter((item) => state.selectedSkills.has(item.id))) {
+          try {
+            const result = await installSkill(skillsDir, skill);
+            addResult(
+              "ok",
+              `${skill.id} → ${target().label} · ${result.replaced ? "기존 폴더를 바꿨습니다" : "설치했습니다"}`,
+              `${skillsDir.name}/${skill.id} 에 파일 ${result.count}개`
+            );
+          } catch (error) {
+            addResult("bad", `${skill.id} · 실패`, error.message || String(error));
+          }
+        }
+        els.progress.textContent = "끝났습니다. 도구를 켜 두었다면 다시 시작해 주세요.";
+      } catch (error) {
+        addResult("bad", "설치하지 못했습니다.", error.message || String(error));
+        els.progress.textContent = "";
+      } finally {
+        state.busy = false;
+        update();
+      }
+    }
+
+    for (const button of document.querySelectorAll(".os-row button")) {
+      button.addEventListener("click", () => {
+        state.os = button.dataset.os;
+        update();
+      });
+    }
+
+    els.toggleAll.addEventListener("click", () => {
+      const all = SKILLS.every((skill) => state.selectedSkills.has(skill.id));
+      state.selectedSkills = all ? new Set() : new Set(SKILLS.map((skill) => skill.id));
+      update();
+    });
+
+    els.install.addEventListener("click", install);
+
+    els.copy.addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(els.commandText.textContent);
+        els.copy.textContent = "복사됨";
+      } catch {
+        els.copy.textContent = "직접 복사";
+      }
+      setTimeout(() => { els.copy.textContent = "복사"; }, 1500);
+    });
+
+    update();
+    loadTree().then(update).catch(() => {});
+  </script>
+</body>
+</html>
